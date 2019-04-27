@@ -4,69 +4,70 @@ import { useMockDB } from 'workshop-graphql-data-uploader';
 useMockDB().then(async dbClient => {
   const allMovies = await dbClient.collection('movies').get();
   console.log('Movies total: ', allMovies.docs.length);
-});
 
+  // STEP 1:
+  // Create baseTypes
+  // Create empty resolver
+  // Create ApolloServer
 
-// STEP 1:
-// Create baseTypes
-// Create empty resolver
-// Create ApolloServer
+  // Every GraphQL needs `type Query`
+  const baseTypes = gql`
+    type Query
+  `;
 
-// Every GraphQL needs `type Query`
-const baseTypes = gql`
-  type Query {
-    greeter: String
-  }
-`;
-
-// STEP 2:
-// Create movieTypes { id, title }
-// - Query movies, and resolve movies
-// - Type Movie { id, title }
-// - movies Query resolver
-// - define ApolloServer `movieService` context 
-// - add type definitions for all properties
-const movieTypes = gql`
+  // STEP 2:
+  // Create movieTypes { id, title }
+  // - Query movies, and resolve movies
+  // - Type Movie { id, title }
+  // - movies Query resolver
+  // - define ApolloServer `movieService` context 
+  // - add type definitions for all properties
+  const movieTypes = gql`
   type Movie {
     id: ID!
     title: String!
   }
 
+  # // STEP 4:
+  # // Add movie Query to movieTypes
+  # // - Query movie by Id
+  # // - Check in playground
   extend type Query {
     movies: [Movie!]
   }
-`;
+  `;
 
-// Array of all type definitions that the server has
-// resolvers: Query contains all the possible queries you can ask of the server
-const server = new ApolloServer({
+  // Array of all type definitions that the server has
+  // resolvers: Query contains all the possible queries you can ask of the server
+  const server = new ApolloServer({
   typeDefs: [baseTypes, movieTypes],
+  context: {
+    dbClient
+  },
   resolvers: {
     Query: {
-      movies: () => [{ id: "345", title: "Terminator 2"}]
+      movies: async (obj, params, context) => {
+        const result = await context.dbClient.collection('movies').get();
+        return result.docs.map(x => x.data());
+      }
     }
   }
+  });
+
+  // STEP 3:
+  // Run app and check GraphiQL playground
+  /*
+    Make queries using
+    {
+      movies {
+        id
+        title
+      }
+    }
+  */
+
+  server.listen();
 });
-
-// STEP 3:
-// Run app and check GraphiQL playground
-/*
-Make queries using
-{
-  movies {
-    id
-    title
-  }
-}
-*/
-
-server.listen();
-
-
-// STEP 4:
-// Add movie Query to movieTypes
-// - Query movie by Id
-// - Check in playground
 
 // STEP 5:
 // Add keywords to Movie type
