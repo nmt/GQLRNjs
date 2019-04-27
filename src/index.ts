@@ -50,14 +50,60 @@ useMockDB().then(async dbClient => {
   }
   `;
 
+  // STEP 6:
+  // Add rating Mutation
+  // - define setRating Mutation and it's input and payload
+  // - Add resolver
+  const ratingTypes = gql`
+    type Mutation {
+      setRating(setRatingInput: SetRatingInput!): SetRatingPayload
+    }
+
+    input SetRatingInput {
+      movieId: ID!
+      userId: ID!
+      score: Int
+    }
+
+    type SetRatingPayload {
+      message: String
+    }
+  `
+
   // Array of all type definitions that the server has
   // resolvers: Query contains all the possible queries you can ask of the server
   const server = new ApolloServer({
-  typeDefs: [baseTypes, movieTypes],
+  typeDefs: [baseTypes, movieTypes, ratingTypes],
   context: {
     dbClient
   },
   resolvers: {
+    /* 
+    mutation {
+      setRating(setRatingInput: {
+        movieId:"1865",
+        userId:"testUser",
+        score:5
+      }),
+      {
+        message
+      }
+    }
+    */
+    Mutation: {
+      setRating: (obj, { setRatingInput }, context) => {
+        const { movieId, userId, score } = setRatingInput;
+        const ratingDocId = userId + ':' + movieId;
+        // .set() is an upsert operation
+        return context.dbClient
+          .collection("ratings")
+          .doc(ratingDocId)
+          .set({ score })
+          .then(() => ({ message: 'success!' }))
+          .catch(err => ({ message: err.message }));
+        // score is shorthand for score: score
+      }
+    },
     Movie: {
       // movie is the parent of keyword and guarantees the presence of ID
       keywords: async (movie, params, context) => {
@@ -96,11 +142,6 @@ useMockDB().then(async dbClient => {
 
   server.listen();
 });
-
-// STEP 6:
-// Add rating Mutation
-// - define setRating Mutation and it's input and payload
-// - Add resolver
 
 // STEP 7:
 // Add rating Query
