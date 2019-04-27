@@ -7,11 +7,17 @@ useMockDB().then(async dbClient => {
 });
 
 
-
 // STEP 1:
 // Create baseTypes
 // Create empty resolver
 // Create ApolloServer
+
+// Every GraphQL needs `type Query`
+const baseTypes = gql`
+  type Query {
+    greeter: String
+  }
+`;
 
 // STEP 2:
 // Create movieTypes { id, title }
@@ -20,9 +26,42 @@ useMockDB().then(async dbClient => {
 // - movies Query resolver
 // - define ApolloServer `movieService` context 
 // - add type definitions for all properties
+const movieTypes = gql`
+  type Movie {
+    id: ID!
+    title: String!
+  }
+
+  extend type Query {
+    movies: [Movie!]
+  }
+`;
+
+// Array of all type definitions that the server has
+// resolvers: Query contains all the possible queries you can ask of the server
+const server = new ApolloServer({
+  typeDefs: [baseTypes, movieTypes],
+  resolvers: {
+    Query: {
+      movies: () => [{ id: "345", title: "Terminator 2"}]
+    }
+  }
+});
 
 // STEP 3:
 // Run app and check GraphiQL playground
+/*
+Make queries using
+{
+  movies {
+    id
+    title
+  }
+}
+*/
+
+server.listen();
+
 
 // STEP 4:
 // Add movie Query to movieTypes
