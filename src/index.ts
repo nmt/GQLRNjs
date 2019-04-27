@@ -27,6 +27,19 @@ useMockDB().then(async dbClient => {
     id: ID!
     title: String!
     keywords: [Keyword]
+    genres: [String]
+    imdbId: ID
+    language: String
+    overview: String
+    popularity: Float
+    posterUrl: String
+    # releaseDate: Date
+    revenue: Int
+    runtime: Int
+    status: String
+    tagline: String
+    voteAverage: Float
+    voteCount: Int
   }
 
   # // STEP 5:
@@ -150,3 +163,4 @@ useMockDB().then(async dbClient => {
 
 // STEP 8:
 // Add dataLoader
+// Generic utility as part of data layer that uses caching and batching to simplify API calls
