@@ -26,14 +26,26 @@ useMockDB().then(async dbClient => {
   type Movie {
     id: ID!
     title: String!
+    keywords: [Keyword]
   }
 
-  # // STEP 4:
-  # // Add movie Query to movieTypes
-  # // - Query movie by Id
+  # // STEP 5:
+  # // Add keywords to Movie type
+  # // - define Type Keywords, and add keywords to Movie Type
+  # // - resolve keywords in Movie Type
   # // - Check in playground
+  type Keyword {
+    id: ID!
+    name: String!
+  }
+
   extend type Query {
     movies: [Movie!]
+
+    # // STEP 4:
+    # // Add movie Query to movieTypes
+    # // - Query movie by Id
+    # // - Check in playground
     movie(id: ID!): Movie
   }
   `;
@@ -46,6 +58,17 @@ useMockDB().then(async dbClient => {
     dbClient
   },
   resolvers: {
+    Movie: {
+      // movie is the parent of keyword and guarantees the presence of ID
+      keywords: async (movie, params, context) => {
+        const movieId = movie.id;
+        const result = await context.dbClient
+          .collection('keywords')
+          .doc(movieId)
+          .get();
+        return result.data().keywords;
+      }
+    },
     Query: {
       movies: async (obj, params, context) => {
         const result = await context.dbClient.collection('movies').get();
@@ -73,12 +96,6 @@ useMockDB().then(async dbClient => {
 
   server.listen();
 });
-
-// STEP 5:
-// Add keywords to Movie type
-// - define Type Keywords, and add keywords to Movie Type
-// - resolve keywords in Movie Type
-// - Check in playground
 
 // STEP 6:
 // Add rating Mutation
