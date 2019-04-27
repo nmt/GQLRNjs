@@ -34,6 +34,7 @@ useMockDB().then(async dbClient => {
   # // - Check in playground
   extend type Query {
     movies: [Movie!]
+    movie(id: ID!): Movie
   }
   `;
 
@@ -49,6 +50,10 @@ useMockDB().then(async dbClient => {
       movies: async (obj, params, context) => {
         const result = await context.dbClient.collection('movies').get();
         return result.docs.map(x => x.data());
+      },
+      movie: async (obj, params, context: {dbClient: firebase.firestore.Firestore }) => {
+        const result = await context.dbClient.collection('movies').doc(params.id).get();
+        return result.data();
       }
     }
   }
